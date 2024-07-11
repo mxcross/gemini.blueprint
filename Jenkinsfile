@@ -8,7 +8,7 @@ kind: Pod
 spec:
   containers:
   - name: maven
-    image: maven:3.9.7-eclipse-temurin-17
+    image: maven:3.9.6-eclipse-temurin-8
     command:
     - cat
     tty: true
@@ -45,35 +45,41 @@ spec:
     }
   }
   stages {
-    stage('Build') {
+    stage('Install and execute unit tests') {
       steps {
         container('maven') {
-          sh 'mvn verify -Dmaven.test.failure.ignore=true'
+          sh 'mvn install'
           junit '**/target/surefire-reports/*.xml'
         }
       }
     }
-    stage('Build with Equinox profile') {
+    stage('Integration tests with Equinox profile') {
       steps {
         container('maven') {
-          sh 'mvn verify -P it,equinox -Dmaven.test.failure.ignore=true'
-          junit '**/target/surefire-reports/*.xml'
+          dir("integration-tests") {
+            sh 'mvn clean install -P equinox'
+            junit '**/target/surefire-reports/*.xml'
+          }
         }
       }
     }
-    stage('Build with Felix profile') {
+    stage('Integration tests with Felix profile') {
       steps {
         container('maven') {
-          sh 'mvn verify -P it,felix -Dmaven.test.failure.ignore=true'
-          junit '**/target/surefire-reports/*.xml'
+          dir("integration-tests") {
+            sh 'mvn clean install -P felix'
+            junit '**/target/surefire-reports/*.xml'
+          }
         }
       }
     }
-    stage('Build with Knopflerfish profile') {
+    stage('Integration tests with Knopflerfish profile') {
       steps {
         container('maven') {
-          sh 'mvn verify -P it,knopflerfish -Dmaven.test.failure.ignore=true'
-          junit '**/target/surefire-reports/*.xml'
+          dir("integration-tests") {
+            sh 'mvn clean install -P knopflerfish'
+            junit '**/target/surefire-reports/*.xml'
+          }
         }
       }
     }
